@@ -3,8 +3,17 @@ from fastapi.responses import HTMLResponse
 #jinja2 is inlcluded in fastapi
 from fastapi.templating import Jinja2Templates
 
+from fastapi.staticfiles import StaticFiles
+
 #intialize an app
 app = FastAPI()
+
+'''
+First  Arg : url of the location of 'static' folder.
+Second Arg : StaticFiles instance pointing to 'static' folder.
+Third  Arg : "name" says the folder is accessible at 'static' 
+'''
+app.mount("/static",StaticFiles(directory="static"),name='static')
 
 #Tell this app, where to find the Jinja2 templates:
 templates = Jinja2Templates(directory='templates')
@@ -35,9 +44,6 @@ def home():
 def get_posts():
     return posts
 
-@app.get('/api/all_posts')
-def posts_home(request: Request):
-    return templates.TemplateResponse(request,'home.html',{"posts":posts})
 
 #The following 2 routes will do the same shit:
 @app.get('/api/posts_length', response_class=HTMLResponse)
@@ -49,3 +55,17 @@ def get_fancy():
 @app.get("/api/shit_route",include_in_schema=False)
 def get_shit():
     return f"<h1>Pathetic Route</h1>"
+
+#SERIOUS SHIT --------------------------------------------------------------------------------------
+
+@app.get('/api/all_posts')
+def posts_home(request: Request):
+    return templates.TemplateResponse(request,'home.html',{"posts":posts,"title":"Posts_Home"})
+
+@app.get('/api/about',name='about') # Now, the url_for should be 'about' not 'about_page'
+def about_page(request: Request):
+    return templates.TemplateResponse(request,'about.html',{"title":"About_Page"})
+
+
+
+#---------------------------------------------------------------------------------------------------
