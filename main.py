@@ -66,6 +66,8 @@ def posts_home(request: Request):
 def about_page(request: Request):
     return templates.TemplateResponse(request,'about.html',{"title":"About_Page"})
 
-
+@app.get('/api/posts/{post_id}')
+def get_post():
+    return 
 
 #---------------------------------------------------------------------------------------------------
