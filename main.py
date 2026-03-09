@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.exceptions import RequestValidationError #Validation errors in Request
 from fastapi.responses import JSONResponse #JSON Response sends JSON responses to frontend
 from starlette.exceptions import HTTPException as StarletteHTTPException 
-#jinja2 is inlcluded in fastapi
+#jinja2 is included in fastapi
 from fastapi.templating import Jinja2Templates
 
 from fastapi.staticfiles import StaticFiles
