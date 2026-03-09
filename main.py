@@ -66,8 +66,12 @@ def posts_home(request: Request):
 def about_page(request: Request):
     return templates.TemplateResponse(request,'about.html',{"title":"About_Page"})
 
+#route to get a specific post
 @app.get('/api/posts/{post_id}')
-def get_post():
-    return 
+def get_post(post_id:int):
+    for post in posts:
+        if post.get('id') == post_id:
+            return post
+    return {"error":"NO Post with the post_id"}
 
 #---------------------------------------------------------------------------------------------------
