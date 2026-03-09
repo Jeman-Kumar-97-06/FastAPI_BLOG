@@ -1,5 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
+from fastapi.exceptions import RequestValidationError #Validation errors in Request
+from fastapi.responses import JSONResponse #JSON Response sends JSON responses to frontend
+from starlette.exceptions import HTTPException as StarletteHTTPException 
 #jinja2 is inlcluded in fastapi
 from fastapi.templating import Jinja2Templates
 
@@ -67,11 +70,47 @@ def about_page(request: Request):
     return templates.TemplateResponse(request,'about.html',{"title":"About_Page"})
 
 #route to get a specific post
+# @app.get('/api/posts/{post_id}')
+# def get_post(post_id:int):
+#     for post in posts:
+#         if post.get('id') == post_id:
+#             return post
+#     #return {"error":"NO Post with the post_id"} --> this is what bitches do!
+#     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Post not found with the given id')
+
 @app.get('/api/posts/{post_id}')
-def get_post(post_id:int):
+def get_post(request:Request, post_id:int):
     for post in posts:
-        if post.get('id') == post_id:
-            return post
-    return {"error":"NO Post with the post_id"}
+        if post.get("id") == post_id:
+            return templates.TemplateResponse(
+                request,
+                'post.html',
+                {"post":post,"title":post['title'][:50]}
+            )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Post not found with the given id')
+
+
+@app.exception_handler(StarletteHTTPException)
+def general_http_exception_handler(request:Request, exception:StarletteHTTPException):
+    message=(
+        exception.detail
+        if exception.detail
+        else 'An error occurred. Please check you request and try again.'
+    )
+    if request.url.path.startswith('/api'):
+        return JSONResponse(
+            status_code=exception.status_code,
+            content={"detail":message}
+        )
+    return templates.TemplateResponse(
+        request,
+        'error.html',
+        {
+            "status_code":exception.status_code,
+            "title":exception.status_code,
+            "message":message
+        },
+        status_code=exception.status_code
+    )
 
 #---------------------------------------------------------------------------------------------------
