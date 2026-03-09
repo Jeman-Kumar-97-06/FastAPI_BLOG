@@ -61,11 +61,11 @@ def get_shit():
 
 #SERIOUS SHIT --------------------------------------------------------------------------------------
 
-@app.get('/api/all_posts')
+@app.get('/posts')
 def posts_home(request: Request):
     return templates.TemplateResponse(request,'home.html',{"posts":posts,"title":"Posts_Home"})
 
-@app.get('/api/about',name='about') # Now, the url_for should be 'about' not 'about_page'
+@app.get('/about',name='about') # Now, the url_for should be 'about' not 'about_page'
 def about_page(request: Request):
     return templates.TemplateResponse(request,'about.html',{"title":"About_Page"})
 
@@ -78,7 +78,7 @@ def about_page(request: Request):
 #     #return {"error":"NO Post with the post_id"} --> this is what bitches do!
 #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Post not found with the given id')
 
-@app.get('/api/posts/{post_id}')
+@app.get('/posts/{post_id}')
 def get_post(request:Request, post_id:int):
     for post in posts:
         if post.get("id") == post_id:
@@ -92,16 +92,19 @@ def get_post(request:Request, post_id:int):
 
 @app.exception_handler(StarletteHTTPException)
 def general_http_exception_handler(request:Request, exception:StarletteHTTPException):
+    #Set message to exception.detail if exception.detail in not undefined. Otherwise, set it to 'An error occurred .....'
     message=(
-        exception.detail
-        if exception.detail
-        else 'An error occurred. Please check you request and try again.'
+        exception.detail if exception.detail else 'An error occurred. Please check you request and try again.'
     )
+
+    #See if the url path starts with '/api'
     if request.url.path.startswith('/api'):
         return JSONResponse(
             status_code=exception.status_code,
             content={"detail":message}
         )
+    
+    #If the url path doesn't start with '/api', then, show 'error.html':
     return templates.TemplateResponse(
         request,
         'error.html',
@@ -112,5 +115,23 @@ def general_http_exception_handler(request:Request, exception:StarletteHTTPExcep
         },
         status_code=exception.status_code
     )
-
+# If you go to '127.0.0.1:8000/posts/hello', this won't show 'error.html' cuz the error in actually data validation error.
+# to cover this : In the following code snippet, we're catching a Request Validation Error:
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request:Request, exception:RequestValidationError):
+    if request.url.path.startswith('/api'):
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            content={"detail":exception.errors()},
+        )
+    return templates.TemplateResponse(
+        request,
+        'error.html',
+        {
+            "status_code":status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "title":status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "message":"Invalid request. Please check your input and try again."
+        },
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT
+    )
 #---------------------------------------------------------------------------------------------------
