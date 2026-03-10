@@ -1,10 +1,13 @@
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError,Field
 from datetime import datetime
+from typing import Annotated
+
 
 class User(BaseModel):
     username: str
     email: str
     age: int
+    legs: Annotated[int, Field(gt=1)] #--> 'legs' must be an integer and greater than '1'. You can use 'ge'->=, 'le'-<=
     bio: str = "" #Default is empty string
     is_active: bool = True #Default is True
     fullname: str | None = None  # it's "string UNION none" but the default is "None"
