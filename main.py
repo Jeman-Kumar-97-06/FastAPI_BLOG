@@ -8,6 +8,8 @@ from fastapi.templating import Jinja2Templates
 
 from fastapi.staticfiles import StaticFiles
 
+from schemas import PostCreate, PostResponse #We don't need PostBase
+
 #intialize an app
 app = FastAPI()
 
@@ -43,10 +45,29 @@ posts : list[dict] = [
 def home():
     return {'message':"Hello World Jeman!"}
 
-@app.get('/api/posts')
+@app.get('/api/posts',response_model=list[PostResponse]) #This will make sure that the response is a list of PostResponse objects.
 def get_posts():
     return posts
 
+@app.get('/api/posts/{post_id}',response_model=PostResponse)
+def get_post_single(post_id:int):
+    for post in posts:
+        if post.get('id') == post_id:
+            return post
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Post not found with the given id')
+
+@app.post('/api/posts',response_model=PostResponse,status_code=status.HTTP_201_CREATED)
+def create_post(post:PostCreate):
+    new_id = max(p["id"] for p in posts) + 1 if posts else 1
+    new_post={
+        id:new_id,
+        "title":post.title,
+        "content":post.content,
+        "author":post.author,
+        "date_posted":"April 22, 2025"
+    }
+    posts.append(new_post)
+    return new_post
 
 #The following 2 routes will do the same shit:
 @app.get('/api/posts_length', response_class=HTMLResponse)
